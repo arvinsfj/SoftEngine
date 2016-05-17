@@ -123,11 +123,10 @@ class SE3DMath {
             return Vector3(x:0,y:0,z:0);
         }
         
-        class func FromArray(arr:[Float],var offset:Int) -> Vector3{
-            if(offset==0){
-                offset=0;
-            }
+        class func FromArray(arr:[Float], offset:Int) -> Vector3 {
+            
             return Vector3(x:arr[offset],y:arr[offset+1],z:arr[offset+2]);
+            
         }
         
         class func Up() -> Vector3{
@@ -433,7 +432,7 @@ class SE3DMath {
         
         func copy() -> Matrix{
             var mCopy=[Float]();
-            for(var i=0; i<self.m.count; i++){
+            for i in 0 ..< self.m.count {
                 mCopy[i]=self.m[i];
             }
             return Matrix(arr:mCopy);
@@ -466,7 +465,7 @@ class SE3DMath {
         
         func toArray() -> [Float] {
             var mCopy=[Float]();
-            for(var i=0; i<self.m.count; i++){
+            for i in 0 ..< self.m.count {
                 mCopy[i]=self.m[i];
             }
             return mCopy;

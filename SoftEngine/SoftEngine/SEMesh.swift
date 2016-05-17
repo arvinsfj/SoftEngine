@@ -28,7 +28,7 @@ class SEMesh {
     }
     
     func computeFacesNormal() -> Void {
-        for (var indexFaces = 0; indexFaces < self.faces.count; indexFaces++) {
+        for indexFaces in 0 ..< self.faces.count {
             let currentFace = self.faces[indexFaces];
             
             let vertexA = self.vertices[currentFace.A];

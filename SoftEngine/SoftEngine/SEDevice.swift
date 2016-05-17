@@ -35,7 +35,7 @@ class SEDevice {
     }
     
     func update() -> Void {//59 fps
-        for (var i = 0; i < self.defaultMeshes.count; i++) {
+        for i in 0 ..< self.defaultMeshes.count {
             //self.defaultMeshes[i].rotation.x += 0.05;
             self.defaultMeshes[i].rotation.y += 0.05;
         }

@@ -42,9 +42,9 @@ class SETexture {
             let u = Int(abs(tu * Float(self.width))) % self.width;
             let v = Int(abs(tv * Float(self.height))) % self.height;
             var pos = (u + v * self.width) << 2;
-            let r = Float(buf[pos++]);
-            let g = Float(buf[pos++]);
-            let b = Float(buf[pos++]);
+            let r = Float(buf[pos]);pos += 1;
+            let g = Float(buf[pos]);pos += 1;
+            let b = Float(buf[pos]);pos += 1;
             let a = Float(buf[pos]);
             
             return SE3DMath.Color4(r:r/255.0, g:g/255.0, b:b/255.0, a:a/255.0);

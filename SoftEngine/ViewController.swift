@@ -34,7 +34,7 @@ class ViewController: UIViewController {
     
     func setupDisplayLink() -> Void
     {
-        let displayLink = CADisplayLink(target: self, selector: Selector("renderLoop"));
+        let displayLink = CADisplayLink(target: self, selector: #selector(self.renderLoop));
         displayLink.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
     }
     
