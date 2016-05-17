@@ -143,14 +143,14 @@ class SEDevice {
                         let u = interpolate(su, maxValue: eu, gradient: gradient);
                         let v = interpolate(sv, maxValue: ev, gradient: gradient);
                         let texColor = tex.map(u, tv: v);
-                        backBuffer[index4++] = UInt8(color.r * ndotl * texColor.r * 255);
-                        backBuffer[index4++] = UInt8(color.g * ndotl * texColor.g * 255);
-                        backBuffer[index4++] = UInt8(color.b * ndotl * texColor.b * 255);
+                        backBuffer[index4] = UInt8(color.r * ndotl * texColor.r * 255);index4 += 1;
+                        backBuffer[index4] = UInt8(color.g * ndotl * texColor.g * 255);index4 += 1;
+                        backBuffer[index4] = UInt8(color.b * ndotl * texColor.b * 255);index4 += 1;
                         backBuffer[index4] = 255;
                     }else{
-                        backBuffer[index4++] = UInt8(color.r * ndotl * 255);
-                        backBuffer[index4++] = UInt8(color.g * ndotl * 255);
-                        backBuffer[index4++] = UInt8(color.b * ndotl * 255);
+                        backBuffer[index4] = UInt8(color.r * ndotl * 255);index4 += 1;
+                        backBuffer[index4] = UInt8(color.g * ndotl * 255);index4 += 1;
+                        backBuffer[index4] = UInt8(color.b * ndotl * 255);index4 += 1;
                         backBuffer[index4] = 255;
                     }
                 }
@@ -244,7 +244,7 @@ class SEDevice {
                 }
             }
         } else {
-            for (var y = Int(p1.y); y <= Int(p3.y); y++) {
+            for (var y = Int(p1.y); y <= Int(p3.y); y += 1) {
                 data.curY = Float(y);
                 
                 if (Float(y) < p2.y) {
@@ -294,7 +294,7 @@ class SEDevice {
         let lightColor = light.color;
         let lightPos = light.position;
         
-        for (var index = 0; index < meshes.count; index++) {
+        for index in 0 ..< meshes.count {
             let cMesh = meshes[index];
             
             let worldMatrix = SE3DMath.Matrix.RotationYawPitchRoll(cMesh.rotation.y, pitch: cMesh.rotation.x, roll: cMesh.rotation.z).multiply(SE3DMath.Matrix.Translation(cMesh.position.x, y: cMesh.position.y, z: cMesh.position.z));
@@ -302,7 +302,7 @@ class SEDevice {
             let worldView = worldMatrix.multiply(viewMatrix);
             let transformMatrix = worldView.multiply(projectionMatrix);
             
-            for (var indexFaces = 0; indexFaces < cMesh.faces.count; indexFaces++) {
+            for indexFaces in 0 ..< cMesh.faces.count {
                 let currentFace = cMesh.faces[indexFaces];
                 
                 let normaVW = currentFace.Normal.transformVector(worldView);//正交变换
@@ -331,7 +331,7 @@ class SEDevice {
         let jsonMaterials = jsonDict["materials"] as! NSArray;
         let jsonMeshes = jsonDict["meshes"] as! NSArray;
         
-        for (var materialIndex = 0; materialIndex < jsonMaterials.count; materialIndex++) {
+        for materialIndex in 0 ..< jsonMaterials.count {
             var material = [String:String]();
             let jsonMaterial = jsonMaterials[materialIndex] as! NSDictionary;
             material["Name"] = jsonMaterial["name"] as? String;
@@ -342,7 +342,7 @@ class SEDevice {
             materials[mid!] = material;
         }
         
-        for (var meshIndex = 0; meshIndex < jsonMeshes.count; meshIndex++) {
+        for meshIndex in 0 ..< jsonMeshes.count {
             let jsonMesh = jsonMeshes[meshIndex] as! NSDictionary;
             
             let verticesArray = jsonMesh["vertices"] as! NSArray;
@@ -370,7 +370,7 @@ class SEDevice {
             
             let mesh = SEMesh(name: jsonMesh["name"] as! String, verticesCount: verticesCount, facesCount: facesCount);
             
-            for (var index = 0; index < verticesCount; index++) {
+            for index in 0 ..< verticesCount {
                 let x = Float(verticesArray[index * verticesStep] as! NSNumber);
                 let y = Float(verticesArray[index * verticesStep + 1] as! NSNumber);
                 let z = Float(verticesArray[index * verticesStep + 2] as! NSNumber);
@@ -392,7 +392,7 @@ class SEDevice {
                 mesh.vertices.append(vertex);
             }
             
-            for (var index = 0; index < facesCount; index++) {
+            for index in 0 ..< facesCount {
                 let a = Int(indicesArray[index * 3] as! NSNumber);
                 let b = Int(indicesArray[index * 3 + 1] as! NSNumber);
                 let c = Int(indicesArray[index * 3 + 2] as! NSNumber);
