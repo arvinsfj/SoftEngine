@@ -9,21 +9,26 @@
 import UIKit
 
 class ViewController: UIViewController {
-    var preDate = NSDate();
+    var preDate = Date();
     var fpsValues = [Int]();
-    var fpsLabel = UILabel(frame: CGRectMake(5,20,300,20));
+    var fpsLabel = UILabel(frame:CGRect(x: 5,y: 20,width: 300,height: 20));
     var canvas = UIImageView();
+    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo().rawValue | CGImageAlphaInfo.premultipliedLast.rawValue);
     var device = SEDevice();
+    
+    var rx:Float = 0.0;
+    var ry:Float = 0.0;
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor(colorLiteralRed: 2/255.0, green: 88/255.0, blue: 44/255.0, alpha: 1);
         self.view.addSubview(fpsLabel);
         // Do any additional setup after loading the view, typically from a nib.
-        canvas.frame=CGRectMake((self.view.frame.size.width-512)/2, (self.view.frame.size.height-384)/2, 512, 384);
+        canvas.frame=CGRect(x: (self.view.frame.size.width-330)/2, y: (self.view.frame.size.height-384)/2, width: 330, height: 330);
         self.view.addSubview(canvas);
         
-        self.device = SEDevice(modelFileName: "monkey.babylon", canvas: canvas);
+        self.device = SEDevice(modelFileName: "monkey.babylon");
         self.setupDisplayLink();
     }
     
@@ -35,15 +40,14 @@ class ViewController: UIViewController {
     func setupDisplayLink() -> Void
     {
         let displayLink = CADisplayLink(target: self, selector: #selector(self.renderLoop));
-        displayLink.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+        displayLink.add(to: .current, forMode: .defaultRunLoopMode)
     }
     
     func renderLoop() -> Void
     {
-        let nowDate = NSDate();
-        let curFPS = Int(1/nowDate.timeIntervalSinceDate(preDate));
+        let nowDate = Date();
+        let curFPS = Int(1/nowDate.timeIntervalSince(preDate));
         self.preDate = nowDate;
-        self.fpsLabel.text = "FPS: \(Int(curFPS))";
         if (self.fpsValues.count<60){
             self.fpsValues.append(curFPS);
         }else{
@@ -55,14 +59,58 @@ class ViewController: UIViewController {
             }
             if self.fpsValues.count >= 1 {
                 let averageFPS = total/self.fpsValues.count;
-                self.fpsLabel.text = "FPS: \(Int(curFPS))  AFPS: \(averageFPS)";
+                self.fpsLabel.text = "APS: \(averageFPS)   FPS: \(curFPS)";
             }
         }
         
         device.clear();
-        device.update();
-        device.render();
-        device.show();
+        device.update(){ meshes in
+            for i in 0 ..< meshes.count {
+                meshes[i].rotation.x += -ry;
+                meshes[i].rotation.y += -rx;
+            }
+            rx = 0;
+            ry = 0;
+        };
+        device.show(){ data in
+            let ctx = CGContext(data: UnsafeMutableRawPointer(mutating: data), width: 330, height: 330, bitsPerComponent: 8, bytesPerRow: 330*4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: self.bitmapInfo.rawValue);
+            let imageRef = ctx?.makeImage();
+            self.canvas.layer.contents = imageRef;
+        };
+    }
+    
+    var startPoint:CGPoint = CGPointFromString("0");
+    var endPoint:CGPoint = CGPointFromString("0");
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //
+        let start = touches.first;
+        startPoint = start!.location(in: self.view);
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //
+        let end = touches.first;
+        endPoint = end!.location(in: self.view);
+        
+        let ddx = endPoint.x - startPoint.x;
+        let ddy = endPoint.y - startPoint.y;
+        
+        rx = Float(ddx) / Float(self.view.frame.size.width);
+        ry = Float(ddy) / Float(self.view.frame.size.height);
+
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //
+        rx = 0;
+        ry = 0;
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //
+        rx = 0;
+        ry = 0;
     }
 }
 

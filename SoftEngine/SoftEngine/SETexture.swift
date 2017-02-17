@@ -13,42 +13,39 @@ class SETexture {
     var fileName:String = "";
     var width:Int = 0;
     var height:Int = 0;
-    var internalBuffer:UnsafePointer<UInt8>? = nil;
+    var widthf:Float = 0;
+    var heightf:Float = 0;
+    var internalBuffer:UnsafePointer<UInt8>;
     
-    init(fileName:String, width:Int, height:Int) {
+    init(fileName:String) {
         self.fileName=fileName;
-        self.width=width;
-        self.height=height;
-        self.load(self.fileName);
-    }
-    
-    private func load(fileName:String) -> Void {
-        let filePath:String=NSBundle.mainBundle().bundlePath.stringByAppendingString("/\(fileName)");
-        let image=UIImage(contentsOfFile: filePath);
-        let cgImage = image?.CGImage;
-        self.width=CGImageGetWidth(cgImage);
-        self.height=CGImageGetHeight(cgImage);
-        let imagedata=malloc(self.width*self.height*4);
-        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.ByteOrderDefault.rawValue | CGImageAlphaInfo.PremultipliedLast.rawValue)
-        let ctx=CGBitmapContextCreate(imagedata,self.width,self.height,8,self.width*4,CGColorSpaceCreateDeviceRGB(),bitmapInfo.rawValue);
-        CGContextDrawImage(ctx, CGRectMake(0, 0, CGFloat(self.width), CGFloat(self.height)), cgImage);
-        let imageData = CGBitmapContextGetData(ctx);
-        self.internalBuffer=UnsafePointer<UInt8>(imageData);
-    }
-    
-    func map(tu:Float, tv:Float) -> SE3DMath.Color4 {
         
-        if let buf = self.internalBuffer {
-            let u = Int(abs(tu * Float(self.width))) % self.width;
-            let v = Int(abs(tv * Float(self.height))) % self.height;
-            var pos = (u + v * self.width) << 2;
-            let r = Float(buf[pos]);pos += 1;
-            let g = Float(buf[pos]);pos += 1;
-            let b = Float(buf[pos]);pos += 1;
-            let a = Float(buf[pos]);
-            
-            return SE3DMath.Color4(r:r/255.0, g:g/255.0, b:b/255.0, a:a/255.0);
-        }
-        return SE3DMath.Color4(r:1, g:1, b:1, a:1);
+        
+        let filePath = Bundle.main.bundlePath + "/\(fileName)";
+        let image = UIImage(contentsOfFile: filePath);
+        let cgImage = image?.cgImage;
+        width=(cgImage?.width)!;
+        height=(cgImage?.height)!;
+        widthf = Float(width);
+        heightf = Float(height);
+        let imagedata=malloc(width*height*4);
+        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo().rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)
+        let ctx=CGContext(data: imagedata,width: width, height: height, bitsPerComponent: 8, bytesPerRow: self.width*4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: bitmapInfo.rawValue);
+        ctx?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: CGFloat(self.width), height: CGFloat(self.height)));
+        let imageData = ctx?.data;
+        internalBuffer=UnsafePointer<UInt8>(imageData!.assumingMemoryBound(to: UInt8.self));
+    }
+    
+    func map(_ tu:Float, tv:Float) -> SE3DMath.Color4 {
+        
+        let u = Int(tu * widthf);
+        let v = Int(tv * heightf);
+        let pos = (u + v * width) << 2;
+        let r = Float(internalBuffer[pos]);
+        let g = Float(internalBuffer[pos+1]);
+        let b = Float(internalBuffer[pos+2]);
+        //let a: Float = 255.0;//Float(internalBuffer[pos+3]);
+        
+        return SE3DMath.Color4(r:r/255.0, g:g/255.0, b:b/255.0, a:1);
     }
 }

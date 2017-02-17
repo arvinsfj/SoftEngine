@@ -7,326 +7,43 @@
 //
 
 import Foundation
-import UIKit
 
 class SEDevice {
-    private var defaultMeshes = [SEMesh]();
-    private var defaultCamera = SECamera(position: SE3DMath.Vector3(x:0,y:0,z:10),target: SE3DMath.Vector3(x:0,y:0,z:0));
-    private var defaultLight = SELight(position: SE3DMath.Vector3(x:0,y:0,z:10),color:SE3DMath.Color4(r: 1, g: 1, b: 1, a: 1));
+    fileprivate var defaultMeshes = [SEMesh]();
+    fileprivate var defaultCamera = SECamera(position: SE3DMath.Vector3(x:0,y:0,z:10),target: SE3DMath.Vector3(x:0,y:0,z:0));
+    fileprivate var defaultLight = SELight(position: SE3DMath.Vector3(x:0,y:0,z:10),color:SE3DMath.Color4(r: 255, g: 255, b: 255, a: 255));
     
-    var workingWidth = 512;
-    var workingHeight = 384;
-    var backBuffer = [UInt8](count: 512*384*4, repeatedValue: 0);
-    var workingContext = UIImageView();
-    var depthBuffer = [Float](count: 512*384, repeatedValue: 10000000);
+    let workingWidth:Float = 330;
+    let workingHeight:Float = 330;
+    var backBuffer = [UInt8](repeating: 0, count: 330*330*4);
+    var depthBuffer = [Float](repeating: 10000000, count: 330*330);
+    
+    var viewMatrix:SE3DMath.Matrix = SE3DMath.Matrix.Zero();
+    var projectionMatrix:SE3DMath.Matrix = SE3DMath.Matrix.Zero();
+    
+    var lightColor:SE3DMath.Color4 = SE3DMath.Color4(r: 255, g: 255, b: 255, a: 255);
+    var lightPos:SE3DMath.Vector3 = SE3DMath.Vector3(x:0,y:0,z:10);
+    
     
     init(){}
     
-    init(modelFileName:String, canvas:UIImageView){
-        let filePath:String=NSBundle.mainBundle().bundlePath.stringByAppendingString("/\(modelFileName)");
-        let jsonData=NSData(contentsOfFile: filePath)!;
-        self.workingContext = canvas;
+    init(modelFileName:String){
+        let filePath:String=Bundle.main.bundlePath + "/\(modelFileName)";
+        let jsonData=try! Data(contentsOf: URL(fileURLWithPath: filePath));
         self.defaultMeshes = self.createMeshesFromJSON(jsonData);
+        
+        viewMatrix = SE3DMath.Matrix.LookAtLH(defaultCamera.position, target: defaultCamera.target, up: SE3DMath.Vector3.Up());
+        projectionMatrix = SE3DMath.Matrix.PerspectiveFovLH(0.78, aspect: workingWidth / workingHeight, znear: 0.01, zfar: 1.0);
+        
+        lightColor = defaultLight.color;
+        lightPos = defaultLight.position;
     }
     
-    func clear() -> Void {//59 fps
-        self.backBuffer = [UInt8](count: 512*384*4, repeatedValue: 0);
-        self.depthBuffer = [Float](count: 512*384, repeatedValue: 10000000);
-    }
-    
-    func update() -> Void {//59 fps
-        for i in 0 ..< self.defaultMeshes.count {
-            //self.defaultMeshes[i].rotation.x += 0.05;
-            self.defaultMeshes[i].rotation.y += 0.05;
-        }
-    }
-    
-    func render() -> Void {//30 fps
-        self.render(self.defaultCamera, light: self.defaultLight, meshes: self.defaultMeshes)
-    }
-    
-    func show() -> Void {//59 fps
-        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.ByteOrderDefault.rawValue | CGImageAlphaInfo.PremultipliedLast.rawValue);
-        let ctx = CGBitmapContextCreate(UnsafeMutablePointer<Void>(self.backBuffer), 512, 384, 8, 512*4, CGColorSpaceCreateDeviceRGB(), bitmapInfo.rawValue);
-        let imageRef = CGBitmapContextCreateImage(ctx);
-        self.workingContext.layer.contents = imageRef;
-    }
-    
-    //
-/*
-    private func putPixel(x:Float, y:Float, z:Float, color:SE3DMath.Color4) -> Void {
-        let index = Int((x) + (y) * Float(self.workingWidth));
-        if (self.depthBuffer[index] >= z) {
-            self.depthBuffer[index] = z;
-            var index4 = index << 2;
-            self.backBuffer[index4++] = UInt8(color.r * 255);
-            self.backBuffer[index4++] = UInt8(color.g * 255);
-            self.backBuffer[index4++] = UInt8(color.b * 255);
-            self.backBuffer[index4++] = UInt8(color.a * 255);
-        }
-    }
-    
-    private func drawPoint(point:SE3DMath.Vector3, color:SE3DMath.Color4) -> Void
-    {
-        if (point.x >= 0 && point.y >= 0 && point.x < Float(self.workingWidth) && point.y < Float(self.workingHeight))
-        {
-            self.putPixel(point.x, y: point.y, z: point.z, color: color);
-        }
-    }
-*/
-    
-    private func project(vertex:Vertex, transMatrix:SE3DMath.Matrix, worldMatrix:SE3DMath.Matrix) -> Vertex {
-        let point2d = vertex.Coordinate.transformPoint(transMatrix);
-        let point3DWorld = vertex.Coordinate.transformPoint(worldMatrix);
-        let normal3DWorld = vertex.Normal.transformPoint(worldMatrix);
-        let x = point2d.x * Float(self.workingWidth) + Float(self.workingWidth) / 2.0;
-        let y = -point2d.y * Float(self.workingHeight) + Float(self.workingHeight) / 2.0;
-        return Vertex(Coordinate: SE3DMath.Vector3(x: x, y: y, z: point2d.z), WorldCoordinate: point3DWorld, TextureCoordinate: vertex.TextureCoordinate, Normal: normal3DWorld);
-    }
-    
-    private func computeNDotL(pointPos:SE3DMath.Vector3, var normal:SE3DMath.Vector3, lightPos:SE3DMath.Vector3) -> Float
-    {
-        var lightDir = lightPos.sub(pointPos);
-        normal=normal.normalize();
-        lightDir=lightDir.normalize();
-        return max(0, normal.dot(lightDir));
-    }
-    
-    private func clamp(value:Float, minValue:Float = 0 , maxValue:Float = 1) -> Float {
-        return max(minValue, min(value, maxValue));
-    }
-    
-    private func interpolate(minValue:Float = 0, maxValue:Float = 1, gradient:Float) -> Float {
-        return minValue + (maxValue - minValue) * gradient;//self.clamp(gradient);
-    }
-    
-    private func processScanLine(data:SEData, va:Vertex, vb:Vertex, vc:Vertex, vd:Vertex, color:SE3DMath.Color4, texture:SETexture?) -> Void
-    {
-        let pa = va.Coordinate;
-        let pb = vb.Coordinate;
-        let pc = vc.Coordinate;
-        let pd = vd.Coordinate;
-        
-        let gradient1 = pa.y != pb.y ? (data.curY - pa.y) / (pb.y - pa.y) : 1;
-        let gradient2 = pc.y != pd.y ? (data.curY - pc.y) / (pd.y - pc.y) : 1;
-        
-        let sx = interpolate(pa.x, maxValue: pb.x, gradient: gradient1);
-        let ex = interpolate(pc.x, maxValue: pd.x, gradient: gradient2);
-        
-        let z1 = interpolate(pa.z, maxValue: pb.z, gradient: gradient1);
-        let z2 = interpolate(pc.z, maxValue: pd.z, gradient: gradient2);
-        
-        let snl = interpolate(data.ndotla, maxValue: data.ndotlb, gradient: gradient1);
-        let enl = interpolate(data.ndotlc, maxValue: data.ndotld, gradient: gradient2);
-        
-        //55 fps
-        let xend = Float(Int(ex));
-        let xlen = ex - sx;
-        let curY = data.curY;
-        let cury = Int(curY) * workingWidth;
-        for (var x = sx; x < xend; x++)
-        {
-            if (x >= 0 && curY >= 0 && x < Float(workingWidth) && data.curY < Float(workingHeight))
-            {
-                let gradient = (x - sx) / xlen;
-                let z = interpolate(z1, maxValue: z2, gradient: gradient);
-                let index = Int(x) + cury;
-                if (z < depthBuffer[index]) {
-                    depthBuffer[index] = z;
-                    let ndotl = interpolate(snl, maxValue: enl, gradient: gradient);
-                    var index4 = index << 2;
-                    if let tex = texture {
-                        let su = interpolate(data.ua, maxValue: data.ub, gradient: gradient1);
-                        let eu = interpolate(data.uc, maxValue: data.ud, gradient: gradient2);
-                        let sv = interpolate(data.va, maxValue: data.vb, gradient: gradient1);
-                        let ev = interpolate(data.vc, maxValue: data.vd, gradient: gradient2);
-                        let u = interpolate(su, maxValue: eu, gradient: gradient);
-                        let v = interpolate(sv, maxValue: ev, gradient: gradient);
-                        let texColor = tex.map(u, tv: v);
-                        backBuffer[index4] = UInt8(color.r * ndotl * texColor.r * 255);index4 += 1;
-                        backBuffer[index4] = UInt8(color.g * ndotl * texColor.g * 255);index4 += 1;
-                        backBuffer[index4] = UInt8(color.b * ndotl * texColor.b * 255);index4 += 1;
-                        backBuffer[index4] = 255;
-                    }else{
-                        backBuffer[index4] = UInt8(color.r * ndotl * 255);index4 += 1;
-                        backBuffer[index4] = UInt8(color.g * ndotl * 255);index4 += 1;
-                        backBuffer[index4] = UInt8(color.b * ndotl * 255);index4 += 1;
-                        backBuffer[index4] = 255;
-                    }
-                }
-            }
-        }
-    }
-    
-    private func drawTriangle(var v1:Vertex, var v2:Vertex, var v3:Vertex, color:SE3DMath.Color4, lightPos:SE3DMath.Vector3, texture:SETexture?) -> Void
-    {
-        if (v1.Coordinate.y > v2.Coordinate.y) {
-            let temp = v2;
-            v2 = v1;
-            v1 = temp;
-        }
-        
-        if (v2.Coordinate.y > v3.Coordinate.y) {
-            let temp = v2;
-            v2 = v3;
-            v3 = temp;
-        }
-        
-        if (v1.Coordinate.y > v2.Coordinate.y) {
-            let temp = v2;
-            v2 = v1;
-            v1 = temp;
-        }
-        
-        let p1 = v1.Coordinate;
-        let p2 = v2.Coordinate;
-        let p3 = v3.Coordinate;
-        
-        let nl1 = self.computeNDotL(v1.WorldCoordinate, normal: v1.Normal, lightPos: lightPos);
-        let nl2 = self.computeNDotL(v2.WorldCoordinate, normal: v2.Normal, lightPos: lightPos);
-        let nl3 = self.computeNDotL(v3.WorldCoordinate, normal: v3.Normal, lightPos: lightPos);
-        
-        let data = SEData();
-        
-        var dP1P2:Float;
-        var dP1P3:Float;
-        
-        if (p2.y > p1.y){
-            dP1P2 = (p2.x - p1.x) / (p2.y - p1.y);
-        } else {
-            dP1P2 = 0;
-        }
-        
-        if (p3.y > p1.y){
-            dP1P3 = (p3.x - p1.x) / (p3.y - p1.y);
-        } else {
-            dP1P3 = 0;
-        }
-        
-        if (dP1P2 > dP1P3) {
-            for (var y = Int(p1.y); y <= Int(p3.y); y++) {
-                data.curY = Float(y);
-                
-                if (Float(y) < p2.y) {
-                    data.ndotla = nl1;
-                    data.ndotlb = nl3;
-                    data.ndotlc = nl1;
-                    data.ndotld = nl2;
-                    
-                    data.ua = v1.TextureCoordinate.x;
-                    data.ub = v3.TextureCoordinate.x;
-                    data.uc = v1.TextureCoordinate.x;
-                    data.ud = v2.TextureCoordinate.x;
-                    
-                    data.va = v1.TextureCoordinate.y;
-                    data.vb = v3.TextureCoordinate.y;
-                    data.vc = v1.TextureCoordinate.y;
-                    data.vd = v2.TextureCoordinate.y;
-                    
-                    self.processScanLine(data, va: v1, vb: v3, vc: v1, vd: v2, color: color, texture: texture);
-                } else {
-                    data.ndotla = nl1;
-                    data.ndotlb = nl3;
-                    data.ndotlc = nl2;
-                    data.ndotld = nl3;
-                    
-                    data.ua = v1.TextureCoordinate.x;
-                    data.ub = v3.TextureCoordinate.x;
-                    data.uc = v2.TextureCoordinate.x;
-                    data.ud = v3.TextureCoordinate.x;
-                    
-                    data.va = v1.TextureCoordinate.y;
-                    data.vb = v3.TextureCoordinate.y;
-                    data.vc = v2.TextureCoordinate.y;
-                    data.vd = v3.TextureCoordinate.y;
-                    
-                    self.processScanLine(data, va: v1, vb: v3, vc: v2, vd: v3, color: color, texture: texture);
-                }
-            }
-        } else {
-            for (var y = Int(p1.y); y <= Int(p3.y); y += 1) {
-                data.curY = Float(y);
-                
-                if (Float(y) < p2.y) {
-                    data.ndotla = nl1;
-                    data.ndotlb = nl2;
-                    data.ndotlc = nl1;
-                    data.ndotld = nl3;
-                    
-                    data.ua = v1.TextureCoordinate.x;
-                    data.ub = v2.TextureCoordinate.x;
-                    data.uc = v1.TextureCoordinate.x;
-                    data.ud = v3.TextureCoordinate.x;
-                    
-                    data.va = v1.TextureCoordinate.y;
-                    data.vb = v2.TextureCoordinate.y;
-                    data.vc = v1.TextureCoordinate.y;
-                    data.vd = v3.TextureCoordinate.y;
-                    
-                    self.processScanLine(data, va: v1, vb: v2, vc: v1, vd: v3, color: color, texture: texture);
-                } else {
-                    data.ndotla = nl2;
-                    data.ndotlb = nl3;
-                    data.ndotlc = nl1;
-                    data.ndotld = nl3;
-                    
-                    data.ua = v2.TextureCoordinate.x;
-                    data.ub = v3.TextureCoordinate.x;
-                    data.uc = v1.TextureCoordinate.x;
-                    data.ud = v3.TextureCoordinate.x;
-                    
-                    data.va = v2.TextureCoordinate.y;
-                    data.vb = v3.TextureCoordinate.y;
-                    data.vc = v1.TextureCoordinate.y;
-                    data.vd = v3.TextureCoordinate.y;
-                    
-                    self.processScanLine(data, va: v2, vb: v3, vc: v1, vd: v3, color: color, texture: texture);
-                }
-            }
-        }
-    }
-    
-    private func render(camera:SECamera, light:SELight, meshes:[SEMesh]) -> Void
-    {
-        let viewMatrix = SE3DMath.Matrix.LookAtLH(camera.position, target: camera.target, up: SE3DMath.Vector3.Up());
-        let projectionMatrix = SE3DMath.Matrix.PerspectiveFovLH(0.78, aspect: Float(self.workingWidth) / Float(self.workingHeight), znear: 0.01, zfar: 1.0);
-        
-        let lightColor = light.color;
-        let lightPos = light.position;
-        
-        for index in 0 ..< meshes.count {
-            let cMesh = meshes[index];
-            
-            let worldMatrix = SE3DMath.Matrix.RotationYawPitchRoll(cMesh.rotation.y, pitch: cMesh.rotation.x, roll: cMesh.rotation.z).multiply(SE3DMath.Matrix.Translation(cMesh.position.x, y: cMesh.position.y, z: cMesh.position.z));
-            
-            let worldView = worldMatrix.multiply(viewMatrix);
-            let transformMatrix = worldView.multiply(projectionMatrix);
-            
-            for indexFaces in 0 ..< cMesh.faces.count {
-                let currentFace = cMesh.faces[indexFaces];
-                
-                let normaVW = currentFace.Normal.transformVector(worldView);//正交变换
-                
-                if (normaVW.z < 0) {
-                    let vertexA = cMesh.vertices[currentFace.A];
-                    let vertexB = cMesh.vertices[currentFace.B];
-                    let vertexC = cMesh.vertices[currentFace.C];
-                    
-                    let pixelA = self.project(vertexA, transMatrix: transformMatrix, worldMatrix: worldMatrix);
-                    let pixelB = self.project(vertexB, transMatrix: transformMatrix, worldMatrix: worldMatrix);
-                    let pixelC = self.project(vertexC, transMatrix: transformMatrix, worldMatrix: worldMatrix);
-                    
-                    self.drawTriangle(pixelA, v2: pixelB, v3: pixelC, color: lightColor, lightPos: lightPos, texture: cMesh.texture);
-                }
-            }
-        }
-    }
-    
-    private func createMeshesFromJSON(jsonData:NSData) -> [SEMesh] {
+    fileprivate func createMeshesFromJSON(_ jsonData:Data) -> [SEMesh] {
         var meshes = [SEMesh]();
         var materials = [String:[String:String]]();
         
-        let jsonDict = try! NSJSONSerialization.JSONObjectWithData(jsonData,options: NSJSONReadingOptions.MutableContainers) as! NSDictionary;
+        let jsonDict = try! JSONSerialization.jsonObject(with: jsonData,options: JSONSerialization.ReadingOptions.mutableContainers) as! NSDictionary;
         
         let jsonMaterials = jsonDict["materials"] as! NSArray;
         let jsonMeshes = jsonDict["meshes"] as! NSArray;
@@ -403,13 +120,13 @@ class SEDevice {
                 mesh.faces.append(face);
             }
             
-            let position = jsonMesh["position"]!;
-            mesh.position = SE3DMath.Vector3(x: Float(position[0] as! NSNumber), y: Float(position[1] as! NSNumber), z: Float(position[2] as! NSNumber));
+            let position = jsonMesh["position"] as! NSArray;
+            mesh.position = SE3DMath.Vector3(x: position[0] as! Float, y: position[1] as! Float, z: position[2] as! Float);
             
             if (uvCount > 0) {
                 let meshTextureID = jsonMesh["materialId"] as! String;
                 let meshTextureName = (materials[meshTextureID])!["DiffuseTextureName"];
-                mesh.texture = SETexture(fileName: meshTextureName!, width: 512, height: 512);
+                mesh.texture = SETexture(fileName: meshTextureName!);
             }
             
             mesh.computeFacesNormal();
@@ -419,5 +136,271 @@ class SEDevice {
         return meshes;
     }
     
+    func clear() -> Void {//59 fps
+        self.backBuffer = [UInt8](repeating: 0, count: 330*330*4);
+        self.depthBuffer = [Float](repeating: 10000000, count: 330*330);
+    }
     
+    func update(updateMesh:([SEMesh])->Void) -> Void {//59 fps
+        updateMesh(self.defaultMeshes);
+        render();
+    }
+    
+    func show(updateImage:@escaping ([UInt8])->Void) -> Void {//59 fps
+        updateImage(self.backBuffer);
+    }
+    
+    fileprivate func render() -> Void {//30 fps
+        render(self.defaultCamera, light: self.defaultLight, meshes: self.defaultMeshes)
+    }
+    
+    fileprivate func computeNDotL(_ pointPos:SE3DMath.Vector3, normal:SE3DMath.Vector3, lightPos:SE3DMath.Vector3) -> Float
+    {
+        let lightDir = lightPos.sub(pointPos).normalize();
+        //normal=normal.normalize();
+        return max(0, normal.dot(lightDir));
+    }
+    
+    fileprivate func clamp(_ value:Float, minValue:Float = 0 , maxValue:Float = 1) -> Float {
+        return max(minValue, min(value, maxValue));
+    }
+    
+    fileprivate func interpolate(_ minValue:Float = 0, maxValue:Float = 1, gradient:Float) -> Float {
+        return minValue + (maxValue - minValue) * gradient;//self.clamp(gradient);
+    }
+    
+    fileprivate func interpolate(_ minValue:Float = 0, lenght:Float = 1, gradient:Float) -> Float {
+        return minValue + lenght * gradient;//self.clamp(gradient);
+    }
+    
+    fileprivate func processScanLine(_ data:SEData, va:Vertex, vb:Vertex, vc:Vertex, vd:Vertex, color:SE3DMath.Color4, texture:SETexture?) -> Void
+    {
+        let pa = va.Coordinate;
+        let pb = vb.Coordinate;
+        let pc = vc.Coordinate;
+        let pd = vd.Coordinate;
+        
+        let gradient1 = pa.y != pb.y ? (data.curY - pa.y) / (pb.y - pa.y) : 1;
+        let gradient2 = pc.y != pd.y ? (data.curY - pc.y) / (pd.y - pc.y) : 1;
+        
+        let sx = interpolate(pa.x, maxValue: pb.x, gradient: gradient1);
+        let ex = interpolate(pc.x, maxValue: pd.x, gradient: gradient2);
+        let xlen = ex - sx;
+        
+        let z1 = interpolate(pa.z, maxValue: pb.z, gradient: gradient1);
+        let z2 = interpolate(pc.z, maxValue: pd.z, gradient: gradient2);
+        let zlen = z2 - z1;
+        
+        let snl = interpolate(data.ndotla, maxValue: data.ndotlb, gradient: gradient1);
+        let enl = interpolate(data.ndotlc, maxValue: data.ndotld, gradient: gradient2);
+        let nllen = enl - snl;
+        
+        let su = interpolate(data.ua, maxValue: data.ub, gradient: gradient1);
+        let eu = interpolate(data.uc, maxValue: data.ud, gradient: gradient2);
+        let ulen = eu - su;
+        
+        let sv = interpolate(data.va, maxValue: data.vb, gradient: gradient1);
+        let ev = interpolate(data.vc, maxValue: data.vd, gradient: gradient2);
+        let vlen = ev - sv;
+        
+        let color_r = (color.r);
+        let color_g = (color.g);
+        let color_b = (color.b);
+        //let color_a = UInt8(color.a);
+        
+        //55 fps
+        let xend = ex;
+        let curY = data.curY;
+        let cury = curY * workingWidth;
+        
+        var x: Float = sx;
+        while x < xend
+        {
+            if (x >= 0 && curY >= 0 && x < workingWidth && data.curY < workingHeight)
+            {
+                let gradient = (x - sx) / xlen;
+                let z = interpolate(z1, lenght: zlen, gradient: gradient);
+                let index = Int(x) + Int(cury);
+                if (z < depthBuffer[index]) {
+                    depthBuffer[index] = z;
+                    let ndotl = interpolate(snl, lenght: nllen, gradient: gradient);
+                    let index4 = index << 2;
+                    if let tex = texture {
+                        let u = interpolate(su, lenght: ulen, gradient: gradient);
+                        let v = interpolate(sv, lenght: vlen, gradient: gradient);
+                        let texColor = tex.map(u, tv: v);
+                        backBuffer[index4] = UInt8(color_r * ndotl * texColor.r);
+                        backBuffer[index4+1] = UInt8(color_g * ndotl * texColor.g);
+                        backBuffer[index4+2] = UInt8(color_b * ndotl * texColor.b);
+                        backBuffer[index4+3] = 255;//color_a;
+                    }else{
+                        backBuffer[index4] = UInt8(color_r * ndotl);
+                        backBuffer[index4+1] = UInt8(color_g * ndotl);
+                        backBuffer[index4+2] = UInt8(color_b * ndotl);
+                        backBuffer[index4+3] = 255;//color_a;
+                    }
+                }
+            }
+            x += 1;
+        }
+    }
+    
+    private func drawTriangle(_ v1:Vertex, v2:Vertex, v3:Vertex, lightColor:SE3DMath.Color4, lightPos:SE3DMath.Vector3, texture:SETexture?) -> Void
+    {
+        var v1 = v1, v2 = v2, v3 = v3
+        if (v1.Coordinate.y > v2.Coordinate.y) {
+            let temp = v2;
+            v2 = v1;
+            v1 = temp;
+        }
+        
+        if (v2.Coordinate.y > v3.Coordinate.y) {
+            let temp = v2;
+            v2 = v3;
+            v3 = temp;
+        }
+        
+        if (v1.Coordinate.y > v2.Coordinate.y) {
+            let temp = v2;
+            v2 = v1;
+            v1 = temp;
+        }
+        //以上将v1放置在y轴最低点，v3放置在最高点，v2放置在中间
+        
+        let p1 = v1.Coordinate;
+        let p2 = v2.Coordinate;
+        let p3 = v3.Coordinate;
+        
+        let nl1 = self.computeNDotL(v1.WorldCoordinate, normal: v1.Normal, lightPos: lightPos);
+        let nl2 = self.computeNDotL(v2.WorldCoordinate, normal: v2.Normal, lightPos: lightPos);
+        let nl3 = self.computeNDotL(v3.WorldCoordinate, normal: v3.Normal, lightPos: lightPos);
+        
+        let data = SEData();
+        
+        let dP2P1:Float = p2.y > p1.y ? (p2.x - p1.x) / (p2.y - p1.y) : 0;
+        let dP3P1:Float = p3.y > p1.y ? (p3.x - p1.x) / (p3.y - p1.y) : 0;
+        
+        if (dP2P1 > dP3P1) {
+            var y = Int(p1.y);
+            while y <= Int(p3.y) {
+                data.curY = Float(y);
+                
+                if (Float(y) < p2.y) {
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl2;
+                    
+                    data.ua = v1.TextureCoordinate.x;
+                    data.ub = v3.TextureCoordinate.x;
+                    data.uc = v1.TextureCoordinate.x;
+                    data.ud = v2.TextureCoordinate.x;
+                    
+                    data.va = v1.TextureCoordinate.y;
+                    data.vb = v3.TextureCoordinate.y;
+                    data.vc = v1.TextureCoordinate.y;
+                    data.vd = v2.TextureCoordinate.y;
+                    
+                    self.processScanLine(data, va: v1, vb: v3, vc: v1, vd: v2, color: lightColor, texture: texture);
+                } else {
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl2;
+                    data.ndotld = nl3;
+                    
+                    data.ua = v1.TextureCoordinate.x;
+                    data.ub = v3.TextureCoordinate.x;
+                    data.uc = v2.TextureCoordinate.x;
+                    data.ud = v3.TextureCoordinate.x;
+                    
+                    data.va = v1.TextureCoordinate.y;
+                    data.vb = v3.TextureCoordinate.y;
+                    data.vc = v2.TextureCoordinate.y;
+                    data.vd = v3.TextureCoordinate.y;
+                    
+                    self.processScanLine(data, va: v1, vb: v3, vc: v2, vd: v3, color: lightColor, texture: texture);
+                }
+                y += 1;
+            }
+        } else {
+            var y = Int(p1.y);
+            while y <= Int(p3.y) {
+                data.curY = Float(y);
+                
+                if (Float(y) < p2.y) {
+                    data.ndotla = nl1;
+                    data.ndotlb = nl2;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    
+                    data.ua = v1.TextureCoordinate.x;
+                    data.ub = v2.TextureCoordinate.x;
+                    data.uc = v1.TextureCoordinate.x;
+                    data.ud = v3.TextureCoordinate.x;
+                    
+                    data.va = v1.TextureCoordinate.y;
+                    data.vb = v2.TextureCoordinate.y;
+                    data.vc = v1.TextureCoordinate.y;
+                    data.vd = v3.TextureCoordinate.y;
+                    
+                    self.processScanLine(data, va: v1, vb: v2, vc: v1, vd: v3, color: lightColor, texture: texture);
+                } else {
+                    data.ndotla = nl2;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    
+                    data.ua = v2.TextureCoordinate.x;
+                    data.ub = v3.TextureCoordinate.x;
+                    data.uc = v1.TextureCoordinate.x;
+                    data.ud = v3.TextureCoordinate.x;
+                    
+                    data.va = v2.TextureCoordinate.y;
+                    data.vb = v3.TextureCoordinate.y;
+                    data.vc = v1.TextureCoordinate.y;
+                    data.vd = v3.TextureCoordinate.y;
+                    
+                    self.processScanLine(data, va: v2, vb: v3, vc: v1, vd: v3, color: lightColor, texture: texture);
+                }
+                y += 1;
+            }
+        }
+    }
+    
+    fileprivate func project(_ vertex:Vertex, transMatrix:SE3DMath.Matrix, worldMatrix:SE3DMath.Matrix) -> Vertex {
+        let point2d = vertex.Coordinate.transformPoint(transMatrix);
+        let point3DWorld = vertex.Coordinate.transformPoint(worldMatrix);
+        let normal3DWorld = vertex.Normal.transformPoint(worldMatrix);
+        let x = point2d.x * workingWidth + workingWidth / 2.0;
+        let y = -point2d.y * workingHeight + workingHeight / 2.0;
+        return Vertex(Coordinate: SE3DMath.Vector3(x: x, y: y, z: point2d.z), WorldCoordinate: point3DWorld, TextureCoordinate: vertex.TextureCoordinate, Normal: normal3DWorld);
+    }
+    
+    fileprivate func render(_ camera:SECamera, light:SELight, meshes:[SEMesh]) -> Void
+    {
+        
+        for cMesh in meshes {
+            
+            let worldMatrix = SE3DMath.Matrix.RotationYawPitchRoll(cMesh.rotation.y, pitch: cMesh.rotation.x, roll: cMesh.rotation.z).multiply(SE3DMath.Matrix.Translation(cMesh.position.x, y: cMesh.position.y, z: cMesh.position.z));
+            let worldView = worldMatrix.multiply(viewMatrix);
+            let transformMatrix = worldView.multiply(projectionMatrix);
+            
+            for currentFace in cMesh.faces {
+                
+                let normaVW = currentFace.Normal.transformVector(worldView);//正交变换
+                
+                if (normaVW.z <= 0) {
+                    let vertexA = cMesh.vertices[currentFace.A];
+                    let vertexB = cMesh.vertices[currentFace.B];
+                    let vertexC = cMesh.vertices[currentFace.C];
+                    
+                    let pixelA = project(vertexA, transMatrix: transformMatrix, worldMatrix: worldMatrix);
+                    let pixelB = project(vertexB, transMatrix: transformMatrix, worldMatrix: worldMatrix);
+                    let pixelC = project(vertexC, transMatrix: transformMatrix, worldMatrix: worldMatrix);
+                    
+                    self.drawTriangle(pixelA, v2: pixelB, v3: pixelC, lightColor: self.lightColor, lightPos: self.lightPos, texture: cMesh.texture);
+                }
+            }
+        }
+    }
 }

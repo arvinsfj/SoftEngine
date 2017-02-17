@@ -28,15 +28,14 @@ class SEMesh {
     }
     
     func computeFacesNormal() -> Void {
-        for indexFaces in 0 ..< self.faces.count {
-            let currentFace = self.faces[indexFaces];
+        for indexFaces in 0 ..< faces.count {
+            let currentFace = faces[indexFaces];
             
-            let vertexA = self.vertices[currentFace.A];
-            let vertexB = self.vertices[currentFace.B];
-            let vertexC = self.vertices[currentFace.C];
+            let vertexA = vertices[currentFace.A];
+            let vertexB = vertices[currentFace.B];
+            let vertexC = vertices[currentFace.C];
             
-            currentFace.Normal = (vertexA.Normal.add(vertexB.Normal.add(vertexC.Normal))).scale(1 / 3);
-            currentFace.Normal=currentFace.Normal.normalize();
+            currentFace.Normal = (vertexA.Normal.add(vertexB.Normal.add(vertexC.Normal))).normalize();
         }
     }
 }

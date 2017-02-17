@@ -46,15 +46,15 @@ class SE3DMath {
             return "{ X:\(self.x) Y:\(self.y) }";
         }
         
-        func add(otherV2:Vector2) -> Vector2{
+        func add(_ otherV2:Vector2) -> Vector2{
             return Vector2(x: self.x+otherV2.x, y: self.y+otherV2.y);
         }
         
-        func sub(otherV2:Vector2) -> Vector2{
+        func sub(_ otherV2:Vector2) -> Vector2{
             return Vector2(x: self.x-otherV2.x, y: self.y-otherV2.y);
         }
         
-        func dot(otherV2:Vector2) -> Float{
+        func dot(_ otherV2:Vector2) -> Float{
             return (self.x * otherV2.x + self.y * otherV2.y);
         }
         
@@ -62,11 +62,11 @@ class SE3DMath {
             return Vector2(x: -self.x, y: -self.y);
         }
         
-        func scale(scale:Float) -> Vector2{
+        func scale(_ scale:Float) -> Vector2{
             return Vector2(x: self.x * scale, y: self.y * scale);
         }
         
-        func equal(otherV2:Vector2) -> Bool{
+        func equal(_ otherV2:Vector2) -> Bool{
             return (self.x == otherV2.x && self.y == otherV2.y);
         }
         
@@ -91,13 +91,13 @@ class SE3DMath {
             return Vector2(x:self.x,y:self.y);
         }
         
-        func distanceSqu(otherV2:Vector2) -> Float{
+        func distanceSqu(_ otherV2:Vector2) -> Float{
             let x = self.x - otherV2.x;
             let y = self.y - otherV2.y;
             return ((x * x) + (y * y));
         }
         
-        func distance(otherV2:Vector2) -> Float{
+        func distance(_ otherV2:Vector2) -> Float{
             let x = self.x - otherV2.x;
             let y = self.y - otherV2.y;
             return sqrt((x * x) + (y * y));
@@ -123,7 +123,7 @@ class SE3DMath {
             return Vector3(x:0,y:0,z:0);
         }
         
-        class func FromArray(arr:[Float], offset:Int) -> Vector3 {
+        class func FromArray(_ arr:[Float], offset:Int) -> Vector3 {
             
             return Vector3(x:arr[offset],y:arr[offset+1],z:arr[offset+2]);
             
@@ -139,19 +139,19 @@ class SE3DMath {
         
         //
         
-        func add(otherV3:Vector3) -> Vector3{
+        func add(_ otherV3:Vector3) -> Vector3{
             return Vector3(x: self.x+otherV3.x, y: self.y+otherV3.y, z: self.z+otherV3.z);
         }
         
-        func sub(otherV3:Vector3) -> Vector3{
+        func sub(_ otherV3:Vector3) -> Vector3{
             return Vector3(x: self.x-otherV3.x, y: self.y-otherV3.y, z: self.z-otherV3.z);
         }
         
-        func dot(otherV3:Vector3) -> Float{
+        func dot(_ otherV3:Vector3) -> Float{
             return (self.x * otherV3.x + self.y * otherV3.y + self.z * otherV3.z);
         }
         
-        func cross(otherV3:Vector3) -> Vector3{
+        func cross(_ otherV3:Vector3) -> Vector3{
             let x = self.y * otherV3.z - self.z * otherV3.y;
             let y = self.z * otherV3.x - self.x * otherV3.z;
             let z = self.x * otherV3.y - self.y * otherV3.x;
@@ -162,11 +162,11 @@ class SE3DMath {
             return Vector3(x: -self.x, y: -self.y, z: -self.z);
         }
         
-        func scale(scale:Float) -> Vector3{
+        func scale(_ scale:Float) -> Vector3{
             return Vector3(x: self.x * scale, y: self.y * scale, z: self.z * scale);
         }
         
-        func equal(otherV3:Vector3) -> Bool{
+        func equal(_ otherV3:Vector3) -> Bool{
             return (self.x == otherV3.x && self.y == otherV3.y && self.z == otherV3.z);
         }
         
@@ -191,7 +191,7 @@ class SE3DMath {
             return Vector3(x:self.x,y:self.y,z:self.z);
         }
         
-        func transformPoint(transMatrix:Matrix) -> Vector3{
+        func transformPoint(_ transMatrix:Matrix) -> Vector3{
             let x = (self.x * transMatrix.m[0]) + (self.y * transMatrix.m[4]) + (self.z * transMatrix.m[8]) + transMatrix.m[12];
             let y = (self.x * transMatrix.m[1]) + (self.y * transMatrix.m[5]) + (self.z * transMatrix.m[9]) + transMatrix.m[13];
             let z = (self.x * transMatrix.m[2]) + (self.y * transMatrix.m[6]) + (self.z * transMatrix.m[10]) + transMatrix.m[14];
@@ -199,21 +199,21 @@ class SE3DMath {
             return Vector3(x: x / w, y: y / w, z: z / w);
         }
         
-        func transformVector(transMatrix:Matrix) -> Vector3{
+        func transformVector(_ transMatrix:Matrix) -> Vector3{
             let x = (self.x * transMatrix.m[0]) + (self.y * transMatrix.m[4]) + (self.z * transMatrix.m[8]);
             let y = (self.x * transMatrix.m[1]) + (self.y * transMatrix.m[5]) + (self.z * transMatrix.m[9]);
             let z = (self.x * transMatrix.m[2]) + (self.y * transMatrix.m[6]) + (self.z * transMatrix.m[10]);
             return Vector3(x: x, y: y, z: z);
         }
         
-        func distanceSqu(otherV3:Vector3) -> Float{
+        func distanceSqu(_ otherV3:Vector3) -> Float{
             let x = self.x - otherV3.x;
             let y = self.y - otherV3.y;
             let z = self.z - otherV3.z;
             return ((x * x) + (y * y) + (z * z));
         }
         
-        func distance(otherV3:Vector3) -> Float{
+        func distance(_ otherV3:Vector3) -> Float{
             let x = self.x - otherV3.x;
             let y = self.y - otherV3.y;
             let z = self.z - otherV3.z;
@@ -240,8 +240,8 @@ class SE3DMath {
             return Matrix(arr: zeroArr);
         }
         
-        class func FromValues(initialM11:Float, initialM12:Float, initialM13:Float, initialM14:Float, initialM21:Float, initialM22:Float, initialM23:Float, initialM24:Float, initialM31:Float, initialM32:Float, initialM33:Float, initialM34:Float, initialM41:Float, initialM42:Float, initialM43:Float, initialM44:Float) -> Matrix {
-            var mValues=[Float](count: 16, repeatedValue: 0.0);
+        class func FromValues(_ initialM11:Float, initialM12:Float, initialM13:Float, initialM14:Float, initialM21:Float, initialM22:Float, initialM23:Float, initialM24:Float, initialM31:Float, initialM32:Float, initialM33:Float, initialM34:Float, initialM41:Float, initialM42:Float, initialM43:Float, initialM44:Float) -> Matrix {
+            var mValues=[Float](repeating: 0.0, count: 16);
             mValues[0] = initialM11;
             mValues[1] = initialM12;
             mValues[2] = initialM13;
@@ -261,7 +261,7 @@ class SE3DMath {
             return Matrix(arr: mValues);
         }
         
-        class func RotationX(angle:Float) -> Matrix {
+        class func RotationX(_ angle:Float) -> Matrix {
             let result = Matrix.Zero();
             let s = sin(angle);
             let c = cos(angle);
@@ -274,7 +274,7 @@ class SE3DMath {
             return result;
         }
         
-        class func RotationY(angle:Float) -> Matrix {
+        class func RotationY(_ angle:Float) -> Matrix {
             let result = Matrix.Zero();
             let s = sin(angle);
             let c = cos(angle);
@@ -287,7 +287,7 @@ class SE3DMath {
             return result;
         }
         
-        class func RotationZ(angle:Float) -> Matrix {
+        class func RotationZ(_ angle:Float) -> Matrix {
             let result = Matrix.Zero();
             let s = sin(angle);
             let c = cos(angle);
@@ -300,11 +300,11 @@ class SE3DMath {
             return result;
         }
         
-        class func RotationAxis(axis:Vector3, angle:Float) -> Matrix {
+        class func RotationAxis(_ axis:Vector3, angle:Float) -> Matrix {
             let s = sin(-angle);
             let c = cos(-angle);
             let c1 = 1 - c;
-            axis.normalize();
+            let _ = axis.normalize();
             let result = Matrix.Zero();
             result.m[0] = (axis.x * axis.x) * c1 + c;
             result.m[1] = (axis.x * axis.y) * c1 - (axis.z * s);
@@ -322,11 +322,11 @@ class SE3DMath {
             return result;
         }
         
-        class func RotationYawPitchRoll(yaw:Float, pitch:Float, roll:Float) -> Matrix {
+        class func RotationYawPitchRoll(_ yaw:Float, pitch:Float, roll:Float) -> Matrix {
             return Matrix.RotationZ(roll).multiply(Matrix.RotationX(pitch)).multiply(Matrix.RotationY(yaw));
         };
         
-        class func Scale(x:Float, y:Float, z:Float) -> Matrix {
+        class func Scale(_ x:Float, y:Float, z:Float) -> Matrix {
             let result = Matrix.Zero();
             result.m[0] = x;
             result.m[5] = y;
@@ -335,7 +335,7 @@ class SE3DMath {
             return result;
         }
         
-        class func ScaleAxis(axis:Vector3) -> Matrix {
+        class func ScaleAxis(_ axis:Vector3) -> Matrix {
             let result = Matrix.Zero();
             result.m[0] = axis.x;
             result.m[5] = axis.y;
@@ -344,7 +344,7 @@ class SE3DMath {
             return result;
         }
         
-        class func Translation(x:Float, y:Float, z:Float) -> Matrix {
+        class func Translation(_ x:Float, y:Float, z:Float) -> Matrix {
             let result = Matrix.Identity();
             result.m[12] = x;
             result.m[13] = y;
@@ -353,7 +353,7 @@ class SE3DMath {
         }
         
         
-        class func LookAtLH(eye:Vector3, target:Vector3, up:Vector3) -> Matrix {
+        class func LookAtLH(_ eye:Vector3, target:Vector3, up:Vector3) -> Matrix {
             var zAxis = target.sub(eye);
             zAxis=zAxis.normalize();
             var xAxis = up.cross(zAxis);
@@ -366,7 +366,7 @@ class SE3DMath {
             return Matrix.FromValues(xAxis.x, initialM12:yAxis.x, initialM13:zAxis.x, initialM14:0, initialM21:xAxis.y, initialM22:yAxis.y, initialM23:zAxis.y, initialM24:0, initialM31:xAxis.z,initialM32: yAxis.z, initialM33:zAxis.z, initialM34:0, initialM41:ex, initialM42:ey, initialM43:ez, initialM44:1);
         }
         
-        class func PerspectiveLH(width:Float, height:Float, znear:Float, zfar:Float) -> Matrix {
+        class func PerspectiveLH(_ width:Float, height:Float, znear:Float, zfar:Float) -> Matrix {
             let matrix = Matrix.Zero();
             matrix.m[0] = (2.0 * znear) / width;
             matrix.m[1] = 0.0;
@@ -387,7 +387,7 @@ class SE3DMath {
             return matrix;
         }
         
-        class func PerspectiveFovLH(fov:Float, aspect:Float, znear:Float, zfar:Float) -> Matrix {
+        class func PerspectiveFovLH(_ fov:Float, aspect:Float, znear:Float, zfar:Float) -> Matrix {
             let matrix = Matrix.Zero();
             let ctan = 1.0 / (tan(fov * 0.5));
             matrix.m[0] = ctan / aspect;
@@ -409,7 +409,7 @@ class SE3DMath {
             return matrix;
         }
         
-        class func Transpose(matrix:Matrix) -> Matrix {
+        class func Transpose(_ matrix:Matrix) -> Matrix {
             let result = Matrix.Zero();
             result.m[0] = matrix.m[0];
             result.m[1] = matrix.m[4];
@@ -531,7 +531,7 @@ class SE3DMath {
             return result;
         }
         
-        func multiply(other:Matrix) -> Matrix {
+        func multiply(_ other:Matrix) -> Matrix {
             let result = Matrix.Zero();
             result.m[0] = self.m[0] * other.m[0] + self.m[1] * other.m[4] + self.m[2] * other.m[8] + self.m[3] * other.m[12];
             result.m[1] = self.m[0] * other.m[1] + self.m[1] * other.m[5] + self.m[2] * other.m[9] + self.m[3] * other.m[13];
@@ -552,7 +552,7 @@ class SE3DMath {
             return result;
         }
         
-        func equal(other:Matrix) -> Bool {
+        func equal(_ other:Matrix) -> Bool {
             return (self.m[0] == other.m[0] && self.m[1] == other.m[1] && self.m[2] == other.m[2] && self.m[3] == other.m[3] && self.m[4] == other.m[4] && self.m[5] == other.m[5] && self.m[6] == other.m[6] && self.m[7] == other.m[7] && self.m[8] == other.m[8] && self.m[9] == other.m[9] && self.m[10] == other.m[10] && self.m[11] == other.m[11] && self.m[12] == other.m[12] && self.m[13] == other.m[13] && self.m[14] == other.m[14] && self.m[15] == other.m[15]);
         }
     }
