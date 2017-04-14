@@ -15,7 +15,7 @@ class SEDevice {
     
     let workingWidth:Float = 330;
     let workingHeight:Float = 330;
-    var backBuffer = [UInt8](repeating: 0, count: 330*330*4);
+    var backBuffer = [UInt8](repeating: 0xff, count: 330*330*4);
     var depthBuffer = [Float](repeating: 10000000, count: 330*330);
     
     var viewMatrix:SE3DMath.Matrix = SE3DMath.Matrix.Zero();
@@ -137,7 +137,7 @@ class SEDevice {
     }
     
     func clear() -> Void {//59 fps
-        self.backBuffer = [UInt8](repeating: 0, count: 330*330*4);
+        self.backBuffer = [UInt8](repeating: 0xff, count: 330*330*4);
         self.depthBuffer = [Float](repeating: 10000000, count: 330*330);
     }
     
@@ -148,6 +148,18 @@ class SEDevice {
     
     func show(updateImage:@escaping ([UInt8])->Void) -> Void {//59 fps
         updateImage(self.backBuffer);
+    }
+    
+    //渲染字符画，按照行列组件灰度字符串，换行使用"\n"
+    let chars  = [" @"," #"," $"," ="," *"," !"," ;"," :"," ~"," -"," ,"," .","  ","  "];
+    let len: Int = 330*330; var str: String = ""; var i: Int = 0;
+    func showAscii(updateImage:@escaping (String)->Void) -> Void {//59 fps
+        str = ""; i = 0;
+        while i < len {
+            str += chars[(Int)(self.backBuffer[i<<2]/20)]; i+=1;
+            if i%330 == 0 { str += "\n"; }
+        }
+        updateImage(str);
     }
     
     fileprivate func render() -> Void {//30 fps

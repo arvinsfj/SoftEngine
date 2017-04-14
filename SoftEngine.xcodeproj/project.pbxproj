@@ -25,6 +25,10 @@
 		216DEE871C23E22400421C52 /* Suzanne.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 216DEE851C23E22400421C52 /* Suzanne.jpg */; };
 		216DEE891C292E2500421C52 /* ring.babylon in Resources */ = {isa = PBXBuildFile; fileRef = 216DEE881C292E2500421C52 /* ring.babylon */; };
 		216DEE9B1C29338A00421C52 /* cylinder.babylon in Resources */ = {isa = PBXBuildFile; fileRef = 216DEE9A1C29338A00421C52 /* cylinder.babylon */; };
+		A2A080951EA0543C0090E7D3 /* inziu-iosevka-CL-bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2A080451EA0543C0090E7D3 /* inziu-iosevka-CL-bold.ttf */; };
+		A2A080961EA0543C0090E7D3 /* inziu-iosevka-CL-bolditalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2A080461EA0543C0090E7D3 /* inziu-iosevka-CL-bolditalic.ttf */; };
+		A2A080971EA0543C0090E7D3 /* inziu-iosevka-CL-italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2A080471EA0543C0090E7D3 /* inziu-iosevka-CL-italic.ttf */; };
+		A2A080981EA0543C0090E7D3 /* inziu-iosevka-CL-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2A080481EA0543C0090E7D3 /* inziu-iosevka-CL-regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +52,10 @@
 		216DEE851C23E22400421C52 /* Suzanne.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Suzanne.jpg; sourceTree = "<group>"; };
 		216DEE881C292E2500421C52 /* ring.babylon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ring.babylon; sourceTree = "<group>"; };
 		216DEE9A1C29338A00421C52 /* cylinder.babylon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cylinder.babylon; sourceTree = "<group>"; };
+		A2A080451EA0543C0090E7D3 /* inziu-iosevka-CL-bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "inziu-iosevka-CL-bold.ttf"; sourceTree = "<group>"; };
+		A2A080461EA0543C0090E7D3 /* inziu-iosevka-CL-bolditalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "inziu-iosevka-CL-bolditalic.ttf"; sourceTree = "<group>"; };
+		A2A080471EA0543C0090E7D3 /* inziu-iosevka-CL-italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "inziu-iosevka-CL-italic.ttf"; sourceTree = "<group>"; };
+		A2A080481EA0543C0090E7D3 /* inziu-iosevka-CL-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "inziu-iosevka-CL-regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +88,7 @@
 		216DEE591C20F7A900421C52 /* SoftEngine */ = {
 			isa = PBXGroup;
 			children = (
+				A2A080441EA0543C0090E7D3 /* inziu-iosevka-ttfs-1.12.5 */,
 				216DEE6E1C20F98500421C52 /* SoftEngine */,
 				216DEE5A1C20F7A900421C52 /* AppDelegate.swift */,
 				216DEE5C1C20F7A900421C52 /* ViewController.swift */,
@@ -117,6 +126,17 @@
 				216DEE851C23E22400421C52 /* Suzanne.jpg */,
 			);
 			path = Resource;
+			sourceTree = "<group>";
+		};
+		A2A080441EA0543C0090E7D3 /* inziu-iosevka-ttfs-1.12.5 */ = {
+			isa = PBXGroup;
+			children = (
+				A2A080451EA0543C0090E7D3 /* inziu-iosevka-CL-bold.ttf */,
+				A2A080461EA0543C0090E7D3 /* inziu-iosevka-CL-bolditalic.ttf */,
+				A2A080471EA0543C0090E7D3 /* inziu-iosevka-CL-italic.ttf */,
+				A2A080481EA0543C0090E7D3 /* inziu-iosevka-CL-regular.ttf */,
+			);
+			path = "inziu-iosevka-ttfs-1.12.5";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -182,11 +202,15 @@
 			files = (
 				216DEE651C20F7A900421C52 /* LaunchScreen.storyboard in Resources */,
 				216DEE621C20F7A900421C52 /* Assets.xcassets in Resources */,
+				A2A080971EA0543C0090E7D3 /* inziu-iosevka-CL-italic.ttf in Resources */,
 				216DEE9B1C29338A00421C52 /* cylinder.babylon in Resources */,
 				216DEE861C23E22400421C52 /* monkey.babylon in Resources */,
+				A2A080981EA0543C0090E7D3 /* inziu-iosevka-CL-regular.ttf in Resources */,
 				216DEE601C20F7A900421C52 /* Main.storyboard in Resources */,
+				A2A080951EA0543C0090E7D3 /* inziu-iosevka-CL-bold.ttf in Resources */,
 				216DEE871C23E22400421C52 /* Suzanne.jpg in Resources */,
 				216DEE891C292E2500421C52 /* ring.babylon in Resources */,
+				A2A080961EA0543C0090E7D3 /* inziu-iosevka-CL-bolditalic.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

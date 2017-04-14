@@ -13,6 +13,7 @@ class ViewController: UIViewController {
     var fpsValues = [Int]();
     var fpsLabel = UILabel(frame:CGRect(x: 5,y: 20,width: 300,height: 20));
     var canvas = UIImageView();
+    var canvasAscii = UILabel();
     let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo().rawValue | CGImageAlphaInfo.premultipliedLast.rawValue);
     var device = SEDevice();
     
@@ -22,12 +23,21 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = UIColor(colorLiteralRed: 2/255.0, green: 88/255.0, blue: 44/255.0, alpha: 1);
-        self.view.addSubview(fpsLabel);
-        // Do any additional setup after loading the view, typically from a nib.
-        canvas.frame=CGRect(x: (self.view.frame.size.width-330)/2, y: (self.view.frame.size.height-384)/2, width: 330, height: 330);
-        self.view.addSubview(canvas);
+        self.view.backgroundColor = UIColor.white;//UIColor(colorLiteralRed: 2/255.0, green: 88/255.0, blue: 44/255.0, alpha: 1);
+        //self.view.addSubview(fpsLabel);
         
+        // Do any additional setup after loading the view, typically from a nib.
+        canvas.frame=CGRect(x: (self.view.frame.size.width-330)/2, y: 0, width: 330, height: 330);
+        canvas.backgroundColor = UIColor.lightGray;
+        self.view.addSubview(canvas);
+        canvasAscii.frame=CGRect(x: (self.view.frame.size.width-330)/2, y: 330-(412-334)/2, width: 330, height: 412);
+        canvasAscii.font = UIFont.init(name: "Inziu-Iosevka-CL-Regular", size: 1.0);//等宽字体
+        canvasAscii.numberOfLines = 0;
+        self.view.addSubview(canvasAscii);
+        
+        self.view.bringSubview(toFront: canvas);
+        
+        //monkey.babylon//ring.babylon//cylinder.babylon
         self.device = SEDevice(modelFileName: "monkey.babylon");
         self.setupDisplayLink();
     }
@@ -69,13 +79,17 @@ class ViewController: UIViewController {
                 meshes[i].rotation.x += -ry;
                 meshes[i].rotation.y += -rx;
             }
-            rx = 0;
+            rx = 0.08;
+            //rx = 0;
             ry = 0;
         };
         device.show(){ data in
             let ctx = CGContext(data: UnsafeMutableRawPointer(mutating: data), width: 330, height: 330, bitsPerComponent: 8, bytesPerRow: 330*4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: self.bitmapInfo.rawValue);
             let imageRef = ctx?.makeImage();
             self.canvas.layer.contents = imageRef;
+        };
+        device.showAscii(){ str in
+            self.canvasAscii.text = str;
         };
     }
     
