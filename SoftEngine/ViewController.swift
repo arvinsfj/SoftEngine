@@ -53,7 +53,7 @@ class ViewController: UIViewController {
         displayLink.add(to: .current, forMode: .defaultRunLoopMode)
     }
     
-    func renderLoop() -> Void
+    @objc func renderLoop() -> Void
     {
         let nowDate = Date();
         let curFPS = Int(1/nowDate.timeIntervalSince(preDate));
