@@ -64,7 +64,7 @@ class SEDevice {
             
             let verticesArray = jsonMesh["vertices"] as! NSArray;
             let indicesArray = jsonMesh["indices"] as! NSArray;
-            let uvCount = Int(jsonMesh["uvCount"] as! NSNumber);
+            let uvCount = Int(truncating: jsonMesh["uvCount"] as! NSNumber);
             
             var verticesStep = 1;
             
@@ -88,20 +88,20 @@ class SEDevice {
             let mesh = SEMesh(name: jsonMesh["name"] as! String, verticesCount: verticesCount, facesCount: facesCount);
             
             for index in 0 ..< verticesCount {
-                let x = Float(verticesArray[index * verticesStep] as! NSNumber);
-                let y = Float(verticesArray[index * verticesStep + 1] as! NSNumber);
-                let z = Float(verticesArray[index * verticesStep + 2] as! NSNumber);
+                let x = Float(truncating: verticesArray[index * verticesStep] as! NSNumber);
+                let y = Float(truncating: verticesArray[index * verticesStep + 1] as! NSNumber);
+                let z = Float(truncating: verticesArray[index * verticesStep + 2] as! NSNumber);
                 
-                let nx = Float(verticesArray[index * verticesStep + 3] as! NSNumber);
-                let ny = Float(verticesArray[index * verticesStep + 4] as! NSNumber);
-                let nz = Float(verticesArray[index * verticesStep + 5] as! NSNumber);
+                let nx = Float(truncating: verticesArray[index * verticesStep + 3] as! NSNumber);
+                let ny = Float(truncating: verticesArray[index * verticesStep + 4] as! NSNumber);
+                let nz = Float(truncating: verticesArray[index * verticesStep + 5] as! NSNumber);
                 
                 let vertex = Vertex()
                 vertex.Coordinate = SE3DMath.Vector3(x:x, y:y, z:z);
                 vertex.Normal = SE3DMath.Vector3(x:nx, y:ny, z:nz);
                 if (uvCount > 0) {
-                    let u = Float(verticesArray[index * verticesStep + 6] as! NSNumber);
-                    let v = Float(verticesArray[index * verticesStep + 7] as! NSNumber);
+                    let u = Float(truncating: verticesArray[index * verticesStep + 6] as! NSNumber);
+                    let v = Float(truncating: verticesArray[index * verticesStep + 7] as! NSNumber);
                     vertex.TextureCoordinate = SE3DMath.Vector2(x:u, y:v);
                 } else {
                     vertex.TextureCoordinate = SE3DMath.Vector2(x:0, y:0);
@@ -110,9 +110,9 @@ class SEDevice {
             }
             
             for index in 0 ..< facesCount {
-                let a = Int(indicesArray[index * 3] as! NSNumber);
-                let b = Int(indicesArray[index * 3 + 1] as! NSNumber);
-                let c = Int(indicesArray[index * 3 + 2] as! NSNumber);
+                let a = Int(truncating: indicesArray[index * 3] as! NSNumber);
+                let b = Int(truncating: indicesArray[index * 3 + 1] as! NSNumber);
+                let c = Int(truncating: indicesArray[index * 3 + 2] as! NSNumber);
                 let face = Face()
                 face.A = a;
                 face.B = b;
@@ -121,7 +121,7 @@ class SEDevice {
             }
             
             let position = jsonMesh["position"] as! NSArray;
-            mesh.position = SE3DMath.Vector3(x: position[0] as! Float, y: position[1] as! Float, z: position[2] as! Float);
+            mesh.position = SE3DMath.Vector3(x: (position[0] as! NSNumber).floatValue, y: (position[1] as! NSNumber).floatValue, z: (position[2] as! NSNumber).floatValue);
             
             if (uvCount > 0) {
                 let meshTextureID = jsonMesh["materialId"] as! String;
